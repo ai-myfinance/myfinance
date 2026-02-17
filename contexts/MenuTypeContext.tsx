@@ -6,6 +6,7 @@ type MenuTypeContextType = {
   currentMenuType: string | null;
   setCurrentMenuType: (type: string) => void;
   availableMenuTypes: { code: string; codeName: string }[];
+  isLoading: boolean;
 };
 
 const MenuTypeContext = createContext<MenuTypeContextType | undefined>(undefined);
@@ -13,6 +14,7 @@ const MenuTypeContext = createContext<MenuTypeContextType | undefined>(undefined
 export function MenuTypeProvider({ children }: { children: ReactNode }) {
   const [currentMenuType, setCurrentMenuType] = useState<string | null>(null);
   const [availableMenuTypes, setAvailableMenuTypes] = useState<{ code: string; codeName: string }[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // 메뉴 타입 로드
@@ -24,14 +26,16 @@ export function MenuTypeProvider({ children }: { children: ReactNode }) {
         if (!currentMenuType && data.length > 0) {
           setCurrentMenuType(data[0].code);
         }
+        setIsLoading(false);
       })
       .catch((error) => {
         console.error('Failed to fetch menu types:', error);
+        setIsLoading(false);
       });
   }, [currentMenuType]);
 
   return (
-    <MenuTypeContext.Provider value={{ currentMenuType, setCurrentMenuType, availableMenuTypes }}>
+    <MenuTypeContext.Provider value={{ currentMenuType, setCurrentMenuType, availableMenuTypes, isLoading }}>
       {children}
     </MenuTypeContext.Provider>
   );
