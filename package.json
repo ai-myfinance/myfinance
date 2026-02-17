@@ -29,5 +29,13 @@
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.19",
     "typescript": "^5"
+  },
+  "build": {
+    "scripts": {
+      "dev": "next dev",
+      "build": "prisma generate && prisma migrate deploy && next build",
+      "start": "next start",
+      "lint": "next lint"
+    }
   }
 }
