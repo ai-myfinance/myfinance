@@ -1,0 +1,58 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 메뉴 관리 테이블
+model Menu {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  path        String?   // URL 경로
+  filePath    String?   // 실제 파일 경로
+  icon        String?
+  sortOrder   Int      @default(0)
+  type        String   // 'common', 'admin', 'system_admin'
+  parentId    String?  @db.Uuid
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  parent   Menu?  @relation("MenuToMenu", fields: [parentId], references: [id], onDelete: Cascade)
+  children Menu[] @relation("MenuToMenu")
+
+  @@index([parentId])
+  @@index([sortOrder])
+  @@index([type])
+}
+
+// 마스터 코드 테이블 (상위 카테고리)
+model MasterCode {
+  code        String   @id
+  codeName    String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  codes Code[]
+}
+
+model Code {
+  code        String   @id
+  masterCode  String
+  codeName    String
+  description String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  masterCodeRel MasterCode @relation(fields: [masterCode], references: [code], onDelete: Cascade)
+
+  @@index([masterCode])
+  @@index([sortOrder])
+}
