@@ -10,10 +10,15 @@ export async function PUT(
   try {
     const { code } = await params;
     const body = await request.json();
-    const { codeName, description, sortOrder, isActive } = body;
+    const { masterCode, codeName, description, sortOrder, isActive } = body;
 
     const updatedCode = await prisma.code.update({
-      where: { code },
+      where: { 
+        masterCode_code: {
+          masterCode,
+          code,
+        }
+      },
       data: {
         codeName,
         description: description || null,
@@ -23,16 +28,8 @@ export async function PUT(
     });
 
     return NextResponse.json(updatedCode);
-  } catch (error: any) {
-    console.error('Error updating code:', error);
-    
-    if (error.code === 'P2025') {
-      return NextResponse.json(
-        { error: '코드를 찾을 수 없습니다.' },
-        { status: 404 }
-      );
-    }
-
+  } catch (error) {
+    console.error('Failed to update code:', error);
     return NextResponse.json(
       { error: 'Failed to update code' },
       { status: 500 }
@@ -46,22 +43,28 @@ export async function DELETE(
 ) {
   try {
     const { code } = await params;
+    const { searchParams } = new URL(request.url);
+    const masterCode = searchParams.get('masterCode');
 
-    await prisma.code.delete({
-      where: { code },
-    });
-
-    return NextResponse.json({ success: true });
-  } catch (error: any) {
-    console.error('Error deleting code:', error);
-    
-    if (error.code === 'P2025') {
+    if (!masterCode) {
       return NextResponse.json(
-        { error: '코드를 찾을 수 없습니다.' },
-        { status: 404 }
+        { error: 'masterCode is required' },
+        { status: 400 }
       );
     }
 
+    await prisma.code.delete({
+      where: {
+        masterCode_code: {
+          masterCode,
+          code,
+        }
+      },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Failed to delete code:', error);
     return NextResponse.json(
       { error: 'Failed to delete code' },
       { status: 500 }
