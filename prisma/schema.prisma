@@ -7,19 +7,51 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// 메뉴 관리 테이블
+// 기존 테이블들
+model MasterCode {
+  code        String   @id @db.VarChar(50)
+  codeName    String   @map("code_name") @db.VarChar(100)
+  description String?  @db.VarChar(200)
+  sortOrder   Int      @default(0) @map("sort_order")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  codes Code[]
+
+  @@map("master_code")
+}
+
+model Code {
+  id             String   @id @default(cuid()) @db.VarChar(36)
+  masterCode     String   @map("master_code") @db.VarChar(50)
+  code           String   @db.VarChar(50)
+  codeName       String   @map("code_name") @db.VarChar(100)
+  description    String?  @db.VarChar(200)
+  sortOrder      Int      @default(0) @map("sort_order")
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  masterCodeRel MasterCode @relation(fields: [masterCode], references: [code], onDelete: Cascade)
+
+  @@unique([masterCode, code])
+  @@index([masterCode])
+  @@map("code")
+}
+
 model Menu {
-  id          String   @id @default(uuid()) @db.Uuid
-  name        String
-  path        String?   // URL 경로
-  filePath    String?   // 실제 파일 경로
-  icon        String?
-  sortOrder   Int      @default(0)
-  type        String   // 'common', 'admin', 'system_admin'
-  parentId    String?  @db.Uuid
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid()) @db.VarChar(36)
+  name      String
+  path      String?
+  filePath  String?  @map("file_path")
+  icon      String?
+  sortOrder Int      @default(0) @map("sort_order")
+  type      String
+  parentId  String?  @map("parent_id") @db.VarChar(36)
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   parent   Menu?  @relation("MenuToMenu", fields: [parentId], references: [id], onDelete: Cascade)
   children Menu[] @relation("MenuToMenu")
@@ -27,32 +59,184 @@ model Menu {
   @@index([parentId])
   @@index([sortOrder])
   @@index([type])
+  @@map("menu")
 }
 
-// 마스터 코드 테이블 (상위 카테고리)
-model MasterCode {
-  code        String   @id
-  codeName    String
-  description String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+// 경비정산 테이블들
+model CardUsage {
+  id                          String    @id @default(cuid()) @db.VarChar(36)
+  transDate                   DateTime? @map("trans_date") @db.Date
+  processStatus               String?   @map("process_status") @db.VarChar(2)
+  approvalDatetime            DateTime? @map("approval_datetime")
+  buyDate                     DateTime? @map("buy_date") @db.Date
+  chargeDate                  DateTime? @map("charge_date") @db.Date
+  cardNo                      String?   @map("card_no") @db.VarChar(50)
+  cardOwnerEmpNo              String?   @map("card_owner_emp_no") @db.VarChar(10)
+  cardOwnerEmpName            String?   @map("card_owner_emp_name") @db.VarChar(40)
+  cardOwnerEmpOrgCode         String?   @map("card_owner_emp_org_code") @db.VarChar(10)
+  cardOwnerEmpOrgName         String?   @map("card_owner_emp_org_name") @db.VarChar(40)
+  cardIssuerCode              String?   @map("card_issuer_code") @db.VarChar(8)
+  cardIssuerName              String?   @map("card_issuer_name") @db.VarChar(10)
+  cardVendorCode              String?   @map("card_vendor_code") @db.VarChar(10)
+  approvalNo                  String?   @map("approval_no") @db.VarChar(12)
+  currency                    String?   @db.VarChar(5)
+  supplyAmt                   Decimal?  @map("supply_amt") @db.Decimal(18, 2)
+  taxAmt                      Decimal?  @map("tax_amt") @db.Decimal(18, 2)
+  taxFreeAmt                  Decimal?  @map("tax_free_amt") @db.Decimal(18, 2)
+  serviceChargeAmt            Int?      @map("service_charge_amt")
+  totalAmt                    Decimal?  @map("total_amt") @db.Decimal(18, 2)
+  feeAmt                      Decimal?  @map("fee_amt") @db.Decimal(18, 2)
+  usdAmt                      Decimal?  @map("usd_amt") @db.Decimal(18, 2)
+  krwAmt                      Decimal?  @map("krw_amt") @db.Decimal(18, 2)
+  supplyLocalAmt              Decimal?  @map("supply_local_amt") @db.Decimal(18, 2)
+  taxLocalAmt                 Decimal?  @map("tax_local_amt") @db.Decimal(18, 2)
+  serviceChargeLocalAmt       Int?      @map("service_charge_local_amt")
+  totalLocalAmt               Decimal?  @map("total_local_amt") @db.Decimal(18, 2)
+  feeLocalAmt                 Decimal?  @map("fee_local_amt") @db.Decimal(18, 2)
+  deductibleYn                Boolean   @default(false) @map("deductible_yn")
+  installmentMonths           String?   @map("installment_months") @db.VarChar(2)
+  remainInstallmentMonths     String?   @map("remain_installment_months") @db.VarChar(2)
+  abroadUseYn                 Boolean   @default(false) @map("abroad_use_yn")
+  supplierNo                  String?   @map("supplier_no") @db.VarChar(15)
+  supplierBuiessNo            String?   @map("supplier_buiness_no") @db.VarChar(10)
+  supplierName                String?   @map("supplier_name") @db.VarChar(50)
+  supplierAddress             String?   @map("supplier_address") @db.VarChar(200)
+  supplierRepName             String?   @map("supplier_rep_name") @db.VarChar(30)
+  supplierTelNo               String?   @map("supplier_tel_no") @db.VarChar(20)
+  supplierPostalNo            String?   @map("supplier_postal_no") @db.VarChar(6)
+  supplierTaxType             String?   @map("supplier_tax_type") @db.VarChar(10)
+  supplierClosedDate          DateTime? @map("supplier_closed_date") @db.Date
+  industryCode                String?   @map("industry_code") @db.VarChar(4)
+  industryName                String?   @map("industry_name") @db.VarChar(60)
+  industryType                String?   @map("industry_type") @db.VarChar(1)
+  buyCollectionNo             String?   @map("buy_collection_no") @db.VarChar(32)
+  originalBuyCollectionNo     String?   @map("original_buy_collection_no") @db.VarChar(32)
+  buyCancelDate               DateTime? @map("buy_cancel_date") @db.Date
+  buyExchangeRate             Decimal?  @map("buy_exchange_rate") @db.Decimal(18, 2)
+  buyExchangeRateDate         DateTime? @map("buy_exchange_rate_date") @db.Date
+  exchangeFeeAmt              Decimal?  @map("exchange_fee_amt") @db.Decimal(18, 2)
+  discountAmt                 Decimal?  @map("discount_amt") @db.Decimal(18, 2)
+  virtualCardNo               String?   @map("virtual_card_no") @db.VarChar(20)
 
-  codes Code[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  details Detail[]
+
+  @@map("card_usage")
 }
 
-model Code {
-  code        String   @id
-  masterCode  String
-  codeName    String
-  description String?
-  sortOrder   Int      @default(0)
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+model Detail {
+  id                              String    @id @default(cuid()) @db.VarChar(36)
+  type                            String    @db.VarChar(1)
+  cardUsageId                     String?   @map("card_usage_id") @db.VarChar(36)
+  groupId                         String?   @map("group_id") @db.VarChar(36)
+  seq                             Int       @default(0)
+  fiscalYear                      String?   @map("fiscal_year") @db.VarChar(4)
+  supplyAmt                       Decimal?  @map("supply_amt") @db.Decimal(18, 2)
+  taxAmt                          Decimal?  @map("tax_amt") @db.Decimal(18, 2)
+  taxFreeAmt                      Decimal?  @map("tax_free_amt") @db.Decimal(18, 2)
+  serviceChargeAmt                Int?      @map("service_charge_amt")
+  totalAmt                        Decimal?  @map("total_amt") @db.Decimal(18, 2)
+  feeAmt                          Decimal?  @map("fee_amt") @db.Decimal(18, 2)
+  settlementAmt                   Decimal?  @map("settlement_amt") @db.Decimal(18, 2)
+  deductibleYn                    Boolean   @default(false) @map("deductible_yn")
+  costCenterCode                  String?   @map("cost_center_code") @db.VarChar(10)
+  fundCenterCode                  String?   @map("fund_center_code") @db.VarChar(16)
+  wbsCode                         String?   @map("wbs_code") @db.VarChar(24)
+  internalOrderCode               String?   @map("internal_order_code") @db.VarChar(12)
+  internalOrderName               String?   @map("internal_order_name") @db.VarChar(50)
+  accountFipexCode                String?   @map("account_fipex_code") @db.VarChar(20)
+  accountCode                     String?   @map("account_code") @db.VarChar(8)
+  remark                          String?   @db.VarChar(200)
+  receiptType                     String?   @map("receipt_type") @db.VarChar(1)
+  receiptDate                     DateTime? @map("receipt_date") @db.Date
+  cardNonUsageReason              String?   @map("card_non_usage_reason") @db.VarChar(1)
+  cardNonUsageReasonEtc           String?   @map("card_non_usage_reason_etc") @db.VarChar(200)
+  settlementEmpNo                 String?   @map("settlement_emp_no") @db.VarChar(10)
+  settlementEmpName               String?   @map("settlement_emp_name") @db.VarChar(40)
+  settlementEmpOrgCode            String?   @map("settlement_emp_org_code") @db.VarChar(10)
+  settlementEmpOrgName            String?   @map("settlement_emp_org_name") @db.VarChar(40)
+  mobileYn                        Boolean   @default(false) @map("mobile_yn")
+  apDocumentNo                    String?   @map("ap_document_no") @db.VarChar(10)
+  apDocumentStatus                String?   @map("ap_document_status") @db.VarChar(20)
+  reverseApDocumentNo             String?   @map("reverse_ap_document_no") @db.VarChar(10)
+  budgetProposalCode              String?   @map("budget_proposal_code") @db.VarChar(12)
+  budgetProposalName              String?   @map("budget_proposal_name") @db.VarChar(50)
+  businessTripExpenseType         String?   @map("business_trip_expense_type") @db.VarChar(10)
+  delegationEmpNo                 String?   @map("delegation_emp_no") @db.VarChar(10)
+  delegationEmpName               String?   @map("delegation_emp_name") @db.VarChar(40)
+  delegationReason                String?   @map("delegation_reason") @db.VarChar(100)
+  delegationDatetime              DateTime? @map("delegation_datetime")
+  delegationApprovalDatetime      DateTime? @map("delegation_approval_datetime")
+  attachmentGroupId               String?   @map("attachment_group_id") @db.VarChar(36)
+  gwApprovalId                    String?   @map("gw_approval_id") @db.VarChar(20)
+  gwApprovalUrl                   String?   @map("gw_approval_url") @db.VarChar(500)
+  attributeId                     String?   @map("attribute_id") @db.VarChar(36)
+  reverseApprovalRequestDatetime  DateTime? @map("reverse_approval_request_datetime")
+  reverseApprovalDatetime         DateTime? @map("reverse_approval_datetime")
+  reverseApprovalId               String?   @map("reverse_approval_id") @db.VarChar(20)
+  reverseApprovalUrl              String?   @map("reverse_approval_url") @db.VarChar(500)
+  postingDate                     DateTime? @map("posting_date") @db.Date
+  disbursementDate                DateTime? @map("disbursement_date") @db.Date
+  delaySubmitYn                   Boolean   @default(false) @map("delay_submit_yn")
+  ifErpDatetime                   DateTime? @map("if_erp_datetime")
+  ifErpSeq                        Int?      @map("if_erp_seq")
+  erpIfDatetime                   DateTime? @map("erp_if_datetime")
+  erpIfFlag                       String?   @map("erp_if_flag") @db.VarChar(10)
+  erpSendData                     String?   @map("erp_send_data") @db.VarChar(5000)
+  erpReceiveData                  String?   @map("erp_receive_data") @db.VarChar(5000)
+  personalUseReason               String?   @map("personal_use_reason") @db.VarChar(100)
+  paymentCancelBlockReason        String?   @map("payment_cancel_block_reason") @db.VarChar(100)
+  personalUseRequestDatetime      DateTime? @map("personal_use_request_datetime")
+  personalUseRequestEmpNo         String?   @map("personal_use_request_emp_no") @db.VarChar(10)
+  personalUseRequestEmpName       String?   @map("personal_use_request_emp_name") @db.VarChar(40)
+  personalUseRequestEmpOrgCode    String?   @map("personal_use_request_emp_org_code") @db.VarChar(10)
+  personalUseRequestEmpOrgName    String?   @map("personal_use_request_emp_org_name") @db.VarChar(40)
+  prepaymentYn                    Boolean   @default(false) @map("prepayment_yn")
+  vendorCode                      String?   @map("vendor_code") @db.VarChar(10)
+  vendorName                      String?   @map("vendor_name") @db.VarChar(40)
+  taxCode                         String?   @map("tax_code") @db.VarChar(2)
+  businessPlaceCode               String?   @map("business_place_code") @db.VarChar(5)
 
-  masterCodeRel MasterCode @relation(fields: [masterCode], references: [code], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@index([masterCode])
-  @@index([sortOrder])
+  cardUsage CardUsage? @relation(fields: [cardUsageId], references: [id])
+  group     Group?     @relation(fields: [groupId], references: [id])
+
+  @@index([cardUsageId])
+  @@index([groupId])
+  @@map("detail")
+}
+
+model Group {
+  id                        String    @id @default(cuid()) @db.VarChar(36)
+  type                      String    @db.VarChar(1)
+  status                    String    @db.VarChar(30)
+  title                     String?   @db.VarChar(30)
+  approvalRequestDatetime   DateTime  @updatedAt @map("approval_request_datetime")
+  approvalDatetime          DateTime? @map("approval_datetime")
+  businessTripId            String?   @map("business_trip_id") @db.VarChar(36)
+  approvalId                String?   @map("approval_id") @db.VarChar(20)
+  approvalUrl               String?   @map("approval_url") @db.VarChar(500)
+  empNo                     String?   @map("emp_no") @db.VarChar(10)
+  empName                   String?   @map("emp_name") @db.VarChar(40)
+  empOrgCode                String?   @map("emp_org_code") @db.VarChar(10)
+  empOrgName                String?   @map("emp_org_name") @db.VarChar(40)
+  reviewer1EmpNo            String?   @map("reviewer1_emp_no") @db.VarChar(10)
+  reviewer1ApprovalDatetime DateTime? @map("reviewer1_approval_datetime")
+  reviewer2EmpNo            String?   @map("reviewer2_emp_no") @db.VarChar(10)
+  reviewer2ApprovalDatetime DateTime? @map("reviewer2_approval_datetime")
+  reviewer3EmpNo            String?   @map("reviewer3_emp_no") @db.VarChar(10)
+  reviewer3ApprovalDatetime DateTime? @map("reviewer3_approval_datetime")
+  approverEmpNo             String?   @map("approver_emp_no") @db.VarChar(10)
+  approverDatetime          DateTime? @map("approver_datetime")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  details Detail[]
+
+  @@map("group")
 }
