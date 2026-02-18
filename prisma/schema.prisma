@@ -23,19 +23,18 @@ model MasterCode {
 }
 
 model Code {
-  id             String   @id @default(cuid()) @db.VarChar(36)
-  masterCode     String   @map("master_code") @db.VarChar(50)
-  code           String   @db.VarChar(50)
-  codeName       String   @map("code_name") @db.VarChar(100)
-  description    String?  @db.VarChar(200)
-  sortOrder      Int      @default(0) @map("sort_order")
-  isActive       Boolean  @default(true) @map("is_active")
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  masterCode  String   @map("master_code") @db.VarChar(50)
+  code        String   @db.VarChar(50)
+  codeName    String   @map("code_name") @db.VarChar(100)
+  description String?  @db.VarChar(200)
+  sortOrder   Int      @default(0) @map("sort_order")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   masterCodeRel MasterCode @relation(fields: [masterCode], references: [code], onDelete: Cascade)
 
-  @@unique([masterCode, code])
+  @@id([masterCode, code])
   @@index([masterCode])
   @@map("code")
 }
@@ -239,4 +238,45 @@ model Group {
   details Detail[]
 
   @@map("group")
+}
+
+// 경비정산 마스터 데이터 테이블들
+model Account {
+  code      String   @id @db.VarChar(8)
+  name      String   @db.VarChar(100)
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("account")
+}
+
+model CostCenter {
+  code      String   @id @db.VarChar(10)
+  name      String   @db.VarChar(100)
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("cost_center")
+}
+
+model FundCenter {
+  code      String   @id @db.VarChar(16)
+  name      String   @db.VarChar(100)
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("fund_center")
+}
+
+model Wbs {
+  code      String   @id @db.VarChar(24)
+  name      String   @db.VarChar(100)
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("wbs")
 }

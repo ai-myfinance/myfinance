@@ -198,7 +198,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
     setCurrentMenuType(type);
     setExpandedMenus(new Set());
   };
-
+  console.log(availableMenuTypes);
   const otherMenuTypes = availableMenuTypes.filter((type) => type.code !== currentMenuType);
 
   // 로딩 중이거나 currentMenuType이 없을 때
