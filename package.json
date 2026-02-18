@@ -4,9 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "postinstall": "prisma generate",
+    "seed:expense": "tsx scripts/seed-expense-master.ts",
+    "seed:card": "tsx scripts/seed-card-usage.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.2",
@@ -30,14 +33,5 @@
     "tailwindcss": "^3.4.19",
     "tsx": "^4.21.0",
     "typescript": "^5"
-  },
-  "build": {
-    "scripts": {
-      "dev": "next dev",
-      "build": "prisma generate && next build",
-      "start": "next start",
-      "lint": "next lint",
-      "postinstall": "prisma generate"
-    }
   }
 }
